@@ -101,7 +101,7 @@ const AvailableRooms = () => {
         )}
       </div>
 
-      <button className="hidden-reset" onClick={handleReset}>Admin Reset</button>
+      {/* <button className="hidden-reset" onClick={handleReset}>Admin Reset</button> */}
     </div>
   );
 };
