@@ -3,5 +3,6 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: "/KEDEST-HOTEL/", // ADD THIS LINE
+  // Change this from '/KEDEST-HOTEL/' back to '/'
+  base: '/', 
 })
