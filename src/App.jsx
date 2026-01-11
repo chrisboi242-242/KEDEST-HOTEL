@@ -11,8 +11,7 @@ import ContactUs from './pages/ContactUs';
 function App() {
   return (
     <DarkModeProvider> 
-      {/* ADD THE BASENAME HERE */}
-      <Router basename="/KEDEST-HOTEL">
+      <Router>
         <div className="app-container">
           <Navbar />
           <Routes>
