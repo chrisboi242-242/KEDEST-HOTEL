@@ -27,7 +27,7 @@ const ContactUs = () => {
     e.preventDefault();
     setIsSending(true);
 
-    const SERVICE_ID = 'service_l7ilmk'; 
+    const SERVICE_ID = 'service_0bwwz7L'; 
     const TEMPLATE_ID = 'template_h15mum9';
     const PUBLIC_KEY = 'RmhDli4fUITgmXU2S';
 
