@@ -1,0 +1,187 @@
+/* Container Wrapper */
+.contact-page-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #0b0e14; /* Your signature deep dark background */
+  color: #ffffff;
+  transition: all 0.3s ease;
+  padding-top:100px;
+}
+
+/* Main Content Area */
+.contact-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 60px 20px;
+  flex: 1; 
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content-split {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 80px;
+}
+
+/* Map Styling */
+.map-section {
+  flex: 1;
+  height: 500px;
+  border-radius: 15px;
+  overflow: hidden;
+  border: 1px solid #d4af37; /* Gold Border */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Form Styling - Matching the Dark Luxury Theme */
+.form-section {
+  flex: 1;
+  background: #161b22; /* Slightly lighter navy/charcoal */
+  padding: 40px;
+  border-radius: 15px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.form-section h1 {
+  margin-bottom: 30px;
+  color: #d4af37; /* Your Gold */
+  font-size: 2rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.form-group {
+  margin-bottom: 25px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 10px;
+  font-weight: 500;
+  color: #d4af37;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+.form-group input, 
+.form-group textarea {
+  padding: 14px;
+  background: #0b0e14;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  color: white;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus, 
+.form-group textarea:focus {
+  outline: none;
+  border-color: #d4af37;
+}
+
+.readonly-input {
+  background-color: #1c2128 !important;
+  color: #8b949e !important;
+  cursor: not-allowed;
+}
+
+/* Submit Button */
+.booking-submit-btn {
+  width: 100%;
+  padding: 16px;
+  background-color: #d4af37;
+  color: #0b0e14; /* Dark text on gold button */
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: transform 0.2s, background 0.3s;
+}
+
+.booking-submit-btn:hover:not(:disabled) {
+  background-color: #f1c40f;
+  transform: translateY(-2px);
+}
+
+.booking-submit-btn:disabled {
+  background-color: #555;
+  color: #888;
+  cursor: not-allowed;
+}
+
+/* FOOTER SECTION - Integrated Luxury Look */
+.contact-footer {
+  width: 100%;
+  padding: 60px 20px 30px;
+  background-color: #080a0f; /* Even darker for the footer */
+  border-top: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.footer-info {
+  max-width: 1200px;
+  margin: 0 auto 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 40px;
+}
+
+.footer-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 1.1rem;
+  color: #ffffff;
+}
+
+.footer-item svg {
+  color: #d4af37;
+  font-size: 1.4rem;
+}
+
+.footer-socials {
+  display: flex;
+  gap: 30px;
+  font-size: 2rem;
+}
+
+.footer-socials a {
+  color: #d4af37;
+  transition: all 0.3s ease;
+}
+
+.footer-socials a:hover {
+  color: #ffffff;
+  transform: scale(1.2);
+}
+
+.copyright {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #555;
+  border-top: 1px solid #161b22;
+  padding-top: 30px;
+  letter-spacing: 1px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .main-content-split {
+    flex-direction: column;
+  }
+  
+  .footer-info {
+    flex-direction: column;
+    text-align: center;
+  }
+}

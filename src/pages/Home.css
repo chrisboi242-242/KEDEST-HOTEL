@@ -1,0 +1,109 @@
+/* --- HOME HERO SECTION --- */
+.home-hero {
+  /* Using your high-quality background image */
+  background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('/images/SMART HOTEL.jpg');
+  background-size: cover;
+  background-position: center;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  text-align: center;
+  position: relative;
+}
+
+.hero-text {
+  /* Matching the glass-morphism luxury style */
+  background: rgba(0, 0, 0, 0.7);
+  padding: 40px;
+  border-radius: 15px;
+  border: 1px solid rgba(212, 175, 55, 0.3); /* Subtle Gold border */
+  backdrop-filter: blur(5px);
+  max-width: 80%;
+}
+
+.hero-text h1 {
+  font-size: clamp(2rem, 8vw, 4rem); /* Responsive typography */
+  margin-bottom: 15px;
+  color: #d4af37; /* Your Gold Theme Color */
+  text-transform: uppercase;
+  letter-spacing: 4px;
+}
+
+.hero-text p {
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  margin-bottom: 30px;
+  font-weight: 300;
+  letter-spacing: 1px;
+}
+
+/* --- THE LUXURY BUTTON --- */
+.explore-btn {
+  padding: 15px 35px;
+  font-size: 18px;
+  background-color: #d4af37; /* Gold */
+  border: none;
+  border-radius: 50px; /* Elegant rounded button */
+  color: #0b0e14; /* Deep Navy/Black text */
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  letter-spacing: 1px;
+}
+
+.explore-btn:hover {
+  background-color: #ffffff;
+  color: #0b0e14;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* --- RESPONSIVE MEDIA QUERIES --- */
+
+/* For Tablets and Small Laptops */
+@media screen and (max-width: 1024px) {
+  .hero-text {
+    padding: 30px;
+    max-width: 90%;
+  }
+}
+
+/* For Mobile Phones (Portrait) */
+@media screen and (max-width: 768px) {
+  .home-hero {
+    /* Ensures the background image doesn't look stretched on tall screens */
+    height: 100vh;
+    background-attachment: scroll; 
+  }
+
+  .hero-text {
+    padding: 25px 20px;
+    width: 95%;
+    border-radius: 10px;
+  }
+
+  .hero-text h1 {
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+
+  .explore-btn {
+    padding: 12px 25px;
+    font-size: 16px;
+  }
+}
+
+/* For Very Small Phones (iPhone SE etc) */
+@media screen and (max-width: 480px) {
+  .hero-text {
+    background: rgba(0, 0, 0, 0.8); /* Darker for better contrast */
+  }
+
+  .hero-text p {
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+}
