@@ -17,7 +17,7 @@
 .logo {
   font-weight: bold;
   font-size: 22px;
-  color: var(--text-color); /* Your Gold */
+  color: var(--text-color); 
   letter-spacing: 1px;
   text-decoration: none;
 }
@@ -43,82 +43,69 @@
   color: var(--text-color);
 }
 
-.mode-toggle {
-  background-color: var(--button-bg);
-  color: var(--button-text);
-  border: 1px solid var(--border-color);
-  padding: 8px 12px;
-  border-radius: 20px;
+/* --- THE HAMBURGER ICON (Add this) --- */
+.menu-toggle {
+  display: none; /* Hidden on desktop */
+  flex-direction: column;
+  gap: 5px;
   cursor: pointer;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.2s ease;
 }
 
-/* --- RESPONSIVE DESIGN BREAKPOINTS --- */
-
-/* 1. TABLETS (under 992px) */
-@media screen and (max-width: 992px) {
-  .navbar {
-    padding: 15px 20px;
-  }
-  .nav-links {
-    gap: 10px;
-  }
-  .nav-links li a {
-    font-size: 0.85rem;
-    padding: 6px 8px;
-  }
+.bar {
+  width: 25px;
+  height: 3px;
+  background-color: var(--text-color);
+  transition: 0.3s;
+  border-radius: 2px;
 }
 
-/* 2. MOBILE PHONES (under 768px) */
+/* --- MOBILE STYLES (Fixed your scroll issue here) --- */
 @media screen and (max-width: 768px) {
-  .navbar {
-    padding: 10px 15px;
-  }
-
-  .logo {
-    font-size: 18px;
-  }
-
-  /* Instead of hiding them, we allow them to scroll horizontally 
-     so the user can still navigate without a complex hamburger menu */
-  .nav-links {
-    gap: 8px;
-    overflow-x: auto;
-    white-space: nowrap;
-    padding: 5px 0;
-    /* Hide scrollbar for a cleaner look */
-    scrollbar-width: none; 
-  }
-  
-  .nav-links::-webkit-scrollbar {
-    display: none;
-  }
-
-  .nav-links li a {
-    font-size: 13px;
-    padding: 5px 8px;
+  .menu-toggle {
+    display: flex; /* Show hamburger on mobile */
+    order: 2;
   }
 
   .mode-toggle {
-    padding: 5px 8px;
-    font-size: 0.85rem;
+    order: 1; /* Moves moon/sun icon next to hamburger */
+    margin-right: 15px;
   }
-}
 
-/* 3. SMALL PHONES (under 480px) */
-@media screen and (max-width: 480px) {
   .logo {
-    font-size: 16px;
-    max-width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    order: 0;
+    flex: 1;
   }
-  
-  .navbar {
-    padding: 10px;
+
+  /* Transform the horizontal bar into a vertical sidebar */
+  .nav-links {
+    position: fixed;
+    top: 0;
+    right: -100%; /* Start hidden off-screen to the right */
+    height: 100vh;
+    width: 250px; /* Width of your sidebar */
+    background-color: var(--navbar-bg);
+    flex-direction: column;
+    justify-content: center;
+    gap: 30px;
+    transition: 0.4s ease-in-out;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+    z-index: 999;
   }
+
+  /* When the 'active' class is added via JS, slide it in */
+  .nav-links.active {
+    right: 0;
+  }
+
+  .nav-links li a {
+    font-size: 1.1rem;
+    display: block;
+    width: 100%;
+    text-align: center;
+  }
+
+  /* X Animation for the Hamburger */
+  .bar.open:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+  .bar.open:nth-child(2) { opacity: 0; }
+  .bar.open:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
 }
