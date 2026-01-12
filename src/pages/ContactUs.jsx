@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDarkMode } from '../context/DarkModeContext';
-import { FaFacebook, FaWhatsapp, FaInstagram, FaEnvelope } from 'react-icons/fa'; // Icons
+import { FaFacebook, FaWhatsapp, FaInstagram, FaEnvelope } from 'react-icons/fa';
 import emailjs from '@emailjs/browser';
 import './ContactUs.css';
+
+// --- ADD THESE FIREBASE IMPORTS ---
+import { db } from '../firebase'; 
+import { doc, updateDoc } from "firebase/firestore";
 
 const ContactUs = () => {
   const { darkMode } = useDarkMode();
@@ -23,7 +27,7 @@ const ContactUs = () => {
 
   const [isSending, setIsSending] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => { // Added async here
     e.preventDefault();
     setIsSending(true);
 
@@ -38,28 +42,39 @@ const ContactUs = () => {
       message: formData.message,
     };
 
-    emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY)
-      .then((result) => {
-        alert(`Thank you, ${formData.name}! Your request has been sent.`);
-        navigate('/available-rooms'); 
-      })
-      .catch((error) => {
-        console.error('Email Error:', error);
-        alert("The request failed. Please check your network.");
-      })
-      .finally(() => setIsSending(false));
+    try {
+      // 1. Send the Email
+      await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
+
+      // 2. IF a room was selected, update Firebase status
+      if (preSelectedRoomId) {
+        const roomRef = doc(db, "rooms", preSelectedRoomId.toString());
+        await updateDoc(roomRef, {
+          isBooked: true
+        });
+      }
+
+      // 3. Success Feedback
+      alert(`Thank you, ${formData.name}! Your reservation for ${preSelectedRoomName || 'your stay'} has been confirmed.`);
+      navigate('/available-rooms'); 
+
+    } catch (error) {
+      console.error('Process Error:', error);
+      alert("Something went wrong. Please check your connection and try again.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
     <div className={`contact-page-wrapper ${darkMode ? 'dark-mode' : ''}`}>
       <div className="contact-container">
         
-        {/* TOP SECTION: MAP & FORM */}
         <div className="main-content-split">
             <div className="map-section">
             <iframe 
                 title="Hotel Location"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3151.8354345059173!2d144.95373531531615!3d-37.81732767975171!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x6ad65d4c2b349649%3A0xb6899234e561db11!2sEnvato!5e0!3m2!1sen!2sau!4v1611822453629!5m2!1sen!2sau" 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3153.0182!2d-122.4194!3d37.7749!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzfCsDQ2JzI5LjYiTiAxMjLCsDI1JzA5LjgiVw!5e0!3m2!1sen!2sus!4v1633000000000!5m2!1sen!2sus" 
                 width="100%" height="100%" style={{ border: 0 }} allowFullScreen="" loading="lazy">
             </iframe>
             </div>
@@ -86,7 +101,6 @@ const ContactUs = () => {
             </div>
         </div>
 
-        {/* BOTTOM SECTION: THE FOOTER */}
         <footer className="contact-footer">
           <div className="footer-info">
             <div className="footer-item">
@@ -98,7 +112,7 @@ const ContactUs = () => {
               <a href="https://instagram.com" target="_blank" rel="noreferrer"><FaInstagram /></a>
             </div>
           </div>
-          <p className="copyright">&copy; {new Date().getFullYear()} Luxury Hotel. All rights reserved.</p>
+          <p className="copyright">© {new Date().getFullYear()} Luxury Hotel. All rights reserved.</p>
         </footer>
 
       </div>
