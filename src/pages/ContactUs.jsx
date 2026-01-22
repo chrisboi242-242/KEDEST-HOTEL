@@ -5,7 +5,7 @@ import { FaFacebook, FaWhatsapp, FaInstagram, FaEnvelope } from 'react-icons/fa'
 import emailjs from '@emailjs/browser';
 import './ContactUs.css';
 
-// --- ADD THESE FIREBASE IMPORTS ---
+// Firebase imports
 import { db } from '../firebase'; 
 import { doc, updateDoc } from "firebase/firestore";
 
@@ -27,7 +27,7 @@ const ContactUs = () => {
 
   const [isSending, setIsSending] = useState(false);
 
-  const handleSubmit = async (e) => { // Added async here
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSending(true);
 
@@ -35,15 +35,16 @@ const ContactUs = () => {
     const TEMPLATE_ID = 'template_h15mum9';
     const PUBLIC_KEY = 'RmhDli4fUITgmXU2S';
 
+    // --- VARIABLES UPDATED TO MATCH YOUR EMAILJS TEMPLATE ---
     const templateParams = {
-      from_name: formData.name,
-      from_email: formData.email,
-      room_name: preSelectedRoomName,
-      message: formData.message,
+      user_name: formData.name,      // Matches {{user_name}}
+      user_email: formData.email,    // Matches {{user_email}}
+      room_name: preSelectedRoomName || "Room Not Specified", // Matches {{room_name}}
+      message: formData.message,      // Matches {{message}}
     };
 
     try {
-      // 1. Send the Email
+      // 1. Send the Email (This triggers BOTH your notification and the Auto-Reply)
       await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
 
       // 2. IF a room was selected, update Firebase status
@@ -54,8 +55,9 @@ const ContactUs = () => {
         });
       }
 
-      // 3. Success Feedback
-      alert(`Thank you, ${formData.name}! Your reservation for ${preSelectedRoomName || 'your stay'} has been confirmed.`);
+      // 3. Updated Success Feedback with the 4-day policy reminder
+      alert(`Success! Check your email (${formData.email}) for your booking confirmation. Remember: If you do not show up within 4 days, the room will be made available back on the website.`);
+      
       navigate('/available-rooms'); 
 
     } catch (error) {
@@ -81,18 +83,38 @@ const ContactUs = () => {
 
             <div className="form-section">
             <h1>Reservation Details</h1>
+            <p style={{marginBottom: '20px', color: 'var(--text-color)'}}>
+              {preSelectedRoomName ? `Booking: ${preSelectedRoomName}` : "General Inquiry"}
+            </p>
             <form onSubmit={handleSubmit} className="contact-form">
                 <div className="form-group">
                     <label>Full Name</label>
-                    <input type="text" required onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                    {/* name="user_name" added for clarity */}
+                    <input 
+                      type="text" 
+                      name="user_name"
+                      required 
+                      onChange={(e) => setFormData({...formData, name: e.target.value})} 
+                    />
                 </div>
                 <div className="form-group">
                     <label>Email Address</label>
-                    <input type="email" required onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                    {/* name="user_email" added for clarity */}
+                    <input 
+                      type="email" 
+                      name="user_email"
+                      required 
+                      onChange={(e) => setFormData({...formData, email: e.target.value})} 
+                    />
                 </div>
                 <div className="form-group">
                     <label>Message</label>
-                    <textarea rows="4" value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})}></textarea>
+                    <textarea 
+                      name="message"
+                      rows="4" 
+                      value={formData.message} 
+                      onChange={(e) => setFormData({...formData, message: e.target.value})}
+                    ></textarea>
                 </div>
                 <button type="submit" className="booking-submit-btn" disabled={isSending}>
                     {isSending ? "Processing..." : "Confirm Reservation"}
@@ -108,11 +130,11 @@ const ContactUs = () => {
             </div>
             <div className="footer-socials">
               <a href="https://facebook.com" target="_blank" rel="noreferrer"><FaFacebook /></a>
-              <a href="https://wa.me/1234567890" target="_blank" rel="noreferrer"><FaWhatsapp /></a>
+              <a href="https://wa.me/2348067073060" target="_blank" rel="noreferrer"><FaWhatsapp /></a>
               <a href="https://instagram.com" target="_blank" rel="noreferrer"><FaInstagram /></a>
             </div>
           </div>
-          <p className="copyright">© {new Date().getFullYear()} Luxury Hotel. All rights reserved.</p>
+          <p className="copyright">© {new Date().getFullYear()} KEDEST-HOTEL. All rights reserved.</p>
         </footer>
 
       </div>
