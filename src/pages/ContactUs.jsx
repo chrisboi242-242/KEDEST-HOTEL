@@ -56,7 +56,7 @@ const ContactUs = () => {
       }
 
       // 3. Updated Success Feedback with the 4-day policy reminder
-      alert(`Success! Check your email (${formData.email}) for your booking confirmation. Remember: If you do not show up within 4 days, the room will be made available back on the website.`);
+      alert(`Success! Check your email (${formData.email}) for your booking confirmation.`);
       
       navigate('/available-rooms'); 
 
