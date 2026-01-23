@@ -76,7 +76,7 @@ const ContactUs = () => {
             <div className="map-section">
             <iframe 
                 title="Hotel Location"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3975.323528!2d7.0!3d5.0!" 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3973.937510136425!2d7.3562308!3d5.1137743!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1042995979512233%3A0x6c8ec47411f5881d!2sOsusu%20Rd%2C%20Aba%2C%20Abia!5e0!3m2!1sen!2sng!4v1769155689242!5m2!1sen!2sng" 
                 width="100%" height="100%" style={{ border: 0 }} allowFullScreen="" loading="lazy">
             </iframe>
             </div>
