@@ -31,8 +31,6 @@ const ContactUs = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // --- RUTHLESS INTERNATIONAL VALIDATION ---
-    // Strip non-numeric characters to check actual length (Global standard is 7-15 digits)
     const cleanPhone = formData.phone.replace(/\D/g, ''); 
     
     if (formData.name.trim().length < 3) {
@@ -41,45 +39,41 @@ const ContactUs = () => {
     }
 
     if (cleanPhone.length < 7 || cleanPhone.length > 15) {
-      alert("Please enter a valid WhatsApp number including country code (e.g., +234 for Nigeria).");
+      alert("Please enter a valid WhatsApp number including country code (e.g., +234).");
       return;
     }
 
     setIsSending(true);
 
-    const SERVICE_ID = 'service_0bwwz7L'; 
-    const TEMPLATE_ID = 'template_h15mum9';
-    const PUBLIC_KEY = 'RmhDli4fUITgmXU2S';
-
     const templateParams = {
       user_name: formData.name,      
       user_email: formData.email,    
-      user_phone: formData.phone, // This sends the formatted string (with +) to your email
+      user_phone: formData.phone, 
       room_name: preSelectedRoomName || "Room Not Specified", 
       message: formData.message,      
     };
 
     try {
-      // 1. Update Firebase FIRST
+      // 1. Update Firebase (Ensure Rules allow 'contactPhone')
       if (preSelectedRoomId) {
         const roomRef = doc(db, "rooms", preSelectedRoomId.toString());
         await updateDoc(roomRef, {
           isBooked: true,
           bookedAt: serverTimestamp(),
           bookedBy: formData.email,
-          contactPhone: formData.phone // Saves the full international number
+          contactPhone: formData.phone 
         });
       }
 
       // 2. Send Email
-      await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
+      await emailjs.send('service_0bwwz7L', 'template_h15mum9', templateParams, 'RmhDli4fUITgmXU2S');
 
-      // 3. Trigger Custom Modal
+      // 3. Success
       setShowSuccess(true); 
 
     } catch (error) {
       console.error('Process Error:', error);
-      alert("Something went wrong. Please check your connection.");
+      alert("Database or Connection Error. Check your Firebase Rules.");
     } finally {
       setIsSending(false);
     }
@@ -139,9 +133,9 @@ const ContactUs = () => {
               <FaCheckCircle className="modal-icon" />
               <h2>Booking Confirmed!</h2>
               <p>Thank you, <strong>{formData.name}</strong>.</p>
-              <p>A confirmation email has been sent to <strong>{formData.email}</strong>.</p>
+              <p>Details sent to <strong>{formData.email}</strong>.</p>
               <div className="policy-box">
-                <strong>4-Day Hold Policy:</strong> This room is reserved. Please complete check-in within 4 days or the reservation will expire.
+                <strong>4-Day Hold Policy:</strong> Room is reserved. Check-in within 4 days or it expires.
               </div>
               <button onClick={() => navigate('/available-rooms')} className="modal-close-btn">
                 Done
@@ -149,6 +143,23 @@ const ContactUs = () => {
             </div>
           </div>
         )}
+
+        {/* --- FOOTER IS BACK --- */}
+        <footer className="contact-footer">
+          <div className="footer-info">
+            <div className="footer-item">
+              <FaEnvelope /> <span>contact@kedesthotel.com</span>
+            </div>
+          <div className="footer-socials">
+              <a href="#"><FaFacebook /></a>
+              <a href="#"><FaInstagram /></a>
+              <a href="https://wa.me/2348067073060"><FaWhatsapp /></a>
+            </div>
+          </div>
+          <div className="copyright">
+            © 2026 KEDEST HOTEL & SUITES. ALL RIGHTS RESERVED.
+          </div>
+        </footer>
       </div>
     </div>
   );
