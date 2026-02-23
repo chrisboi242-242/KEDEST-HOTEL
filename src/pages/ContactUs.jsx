@@ -28,7 +28,7 @@ const ContactUs = () => {
   const [isSending, setIsSending] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const handleSubmit = async (e) => {
+       const handleSubmit = async (e) => {
     e.preventDefault();
 
     const cleanPhone = formData.phone.replace(/\D/g, ''); 
@@ -39,7 +39,7 @@ const ContactUs = () => {
     }
 
     if (cleanPhone.length < 7 || cleanPhone.length > 15) {
-      alert("Please enter a valid WhatsApp number including country code (e.g., +234).");
+      alert("Please enter a valid WhatsApp number.");
       return;
     }
 
@@ -54,14 +54,22 @@ const ContactUs = () => {
     };
 
     try {
-      // 1. Update Firebase (Ensure Rules allow 'contactPhone')
+      // 1. Update Firebase
       if (preSelectedRoomId) {
         const roomRef = doc(db, "rooms", preSelectedRoomId.toString());
+        
         await updateDoc(roomRef, {
+          // Fields being updated
           isBooked: true,
           bookedAt: serverTimestamp(),
           bookedBy: formData.email,
-          contactPhone: formData.phone 
+          contactPhone: formData.phone,
+
+          // IMPORTANT: We send the existing name/id/image back
+          // This satisfies the "Security Rule" that checks if these changed
+          title: preSelectedRoomName,
+          id: preSelectedRoomId
+          // If you have the image URL in state, add it here: image: roomImage
         });
       }
 
@@ -73,11 +81,14 @@ const ContactUs = () => {
 
     } catch (error) {
       console.error('Process Error:', error);
-      alert("Database or Connection Error. Check your Firebase Rules.");
+      // This alert triggers if the Security Rules block the request
+      alert("Security Block: The database refused this update. Ensure all required fields are sent.");
     } finally {
       setIsSending(false);
     }
-  };
+  }; 
+    
+  
 
   return (
     <div className={`contact-page-wrapper ${darkMode ? 'dark-mode' : ''}`}>
