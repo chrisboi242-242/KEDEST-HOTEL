@@ -28,7 +28,7 @@ const ContactUs = () => {
   const [isSending, setIsSending] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-       const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const cleanPhone = formData.phone.replace(/\D/g, ''); 
@@ -56,20 +56,17 @@ const ContactUs = () => {
     try {
       // 1. Update Firebase
       if (preSelectedRoomId) {
+        // We use the ID as the document name (must be string for the path)
         const roomRef = doc(db, "rooms", preSelectedRoomId.toString());
         
         await updateDoc(roomRef, {
-          // Fields being updated
           isBooked: true,
           bookedAt: serverTimestamp(),
-          bookedBy: formData.email,
+          bookedBy: formData.name, 
           contactPhone: formData.phone,
-
-          // IMPORTANT: We send the existing name/id/image back
-          // This satisfies the "Security Rule" that checks if these changed
-          title: preSelectedRoomName,
-          id: preSelectedRoomId
-          // If you have the image URL in state, add it here: image: roomImage
+          // MATCHING YOUR DATABASE SCREENSHOT:
+          name: preSelectedRoomName, 
+          id: Number(preSelectedRoomId) 
         });
       }
 
@@ -81,14 +78,11 @@ const ContactUs = () => {
 
     } catch (error) {
       console.error('Process Error:', error);
-      // This alert triggers if the Security Rules block the request
-      alert("Security Block: The database refused this update. Ensure all required fields are sent.");
+      alert("Database Error: Make sure your Firebase Rules allow 'update' and your document ID exists.");
     } finally {
       setIsSending(false);
     }
-  }; 
-    
-  
+  };
 
   return (
     <div className={`contact-page-wrapper ${darkMode ? 'dark-mode' : ''}`}>
@@ -97,7 +91,7 @@ const ContactUs = () => {
             <div className="map-section">
               <iframe 
                   title="Hotel Location"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3975.940665306915!2d7.365!3d5.111!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNcKwMDYnMzkuNiJOIDfCsDIxJzU0LjAiRQ!5e0!3m2!1sen!2sng!4v1640000000000" 
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3975.940665306915!2d7.365!3d5.111!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNcKwMDYnMzkuNiJOIDfCsDIxJzU0LjAiRQ!5e0!3m2!1sen!2sng!4v1625612345678" 
                   width="100%" height="100%" style={{ border: 0 }} allowFullScreen="" loading="lazy">
               </iframe>
             </div>
@@ -155,7 +149,6 @@ const ContactUs = () => {
           </div>
         )}
 
-        {/* --- FOOTER IS BACK --- */}
         <footer className="contact-footer">
           <div className="footer-info">
             <div className="footer-item">
