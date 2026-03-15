@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, onSnapshot, doc, updateDoc, getDoc } from "firebase/firestore";
-import { FaSyncAlt, FaMoneyBillWave, FaLock, FaKey, FaPowerOff, FaUserCircle, FaCheckCircle, FaExclamationTriangle, FaFileDownload } from 'react-icons/fa';
+import { FaSyncAlt, FaMoneyBillWave, FaLock, FaKey, FaPowerOff, FaUserCircle, FaCheckCircle, FaExclamationTriangle, FaFileDownload, FaEye, FaEyeSlash } from 'react-icons/fa';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const Admin = () => {
   const [rooms, setRooms] = useState([]);
@@ -15,6 +15,7 @@ const Admin = () => {
   const [inputPass, setInputPass] = useState("");
   const [dbPassword, setDbPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [showPass, setShowPass] = useState(false); // To see what they are typing
   
   // High-End UX States
   const [processingId, setProcessingId] = useState(null);
@@ -42,54 +43,14 @@ const Admin = () => {
     return () => unsubscribe();
   }, []);
 
-  // PDF Generation Logic
-  const generateAuditPDF = () => {
-    const doc = new jsPDF();
-    const today = new Date().toLocaleDateString();
-    
-    doc.setFontSize(22);
-    doc.setTextColor(1, 22, 39); 
-    doc.text("KEDEST HOTEL & SUITES", 14, 20);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(150);
-    doc.text(`DAILY OCCUPANCY AUDIT - ${today}`, 14, 28);
-    doc.text("Aba, Abia State, Nigeria", 14, 33);
-
-    const bookedRooms = rooms.filter(r => r.isBooked);
-    const tableData = bookedRooms.map(r => [
-      r.name,
-      r.bookedBy || "Walk-in",
-      r.contactPhone || "N/A",
-      `N${Number(r.price).toLocaleString()}`,
-      r.lastUpdated ? new Date(r.lastUpdated).toLocaleTimeString() : "N/A"
-    ]);
-
-    doc.autoTable({
-      startY: 45,
-      head: [['Room', 'Guest Name', 'Contact', 'Rate', 'Last Action']],
-      body: tableData,
-      headStyles: { fillColor: [184, 134, 11] },
-      alternateRowStyles: { fillColor: [245, 245, 245] },
-    });
-
-    const finalY = doc.lastAutoTable.finalY || 45;
-    doc.setFontSize(14);
-    doc.setTextColor(1, 22, 39);
-    doc.text(`Total Occupancy Revenue: N${totalRevenue.toLocaleString()}`, 14, finalY + 15);
-
-    doc.save(`Kedest-Audit-${today}.pdf`);
-    showToast("Audit Report Generated");
-  };
+  const totalRevenue = rooms
+    .filter(room => room.isBooked)
+    .reduce((sum, room) => sum + (Number(room.price) || 0), 0);
 
   const showToast = (msg, type = "success") => {
     setNotification({ show: true, message: msg, type });
     setTimeout(() => setNotification({ show: false, message: "", type: "" }), 3000);
   };
-
-  const totalRevenue = rooms
-    .filter(room => room.isBooked)
-    .reduce((sum, room) => sum + (Number(room.price) || 0), 0);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -102,11 +63,6 @@ const Admin = () => {
     } else {
       showToast("Access Denied: Invalid Key", "error");
     }
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setInputPass("");
   };
 
   const updateRoomStatus = async (id, currentStatus) => {
@@ -131,7 +87,11 @@ const Admin = () => {
   };
 
   const updatePrice = async (id, newPrice) => {
-    if (!newPrice || isNaN(newPrice) || newPrice < 0) return;
+    // ERROR DETECTION: Prevent trash values
+    if (!newPrice || isNaN(newPrice) || Number(newPrice) <= 0) {
+      showToast("Invalid Price: Use numbers > 0", "error");
+      return;
+    }
     setProcessingId(id);
     try {
       const roomRef = doc(db, "rooms", id);
@@ -148,7 +108,8 @@ const Admin = () => {
   };
 
   const changePortalPassword = async () => {
-    if (newPassword.length < 6) return showToast("Password too weak!", "error");
+    // DETECTION: Minimum 6 chars
+    if (newPassword.length < 6) return showToast("Too short! Use 6+ chars", "error");
     try {
       const docRef = doc(db, "settings", "admin_config");
       await updateDoc(docRef, { portalPassword: newPassword });
@@ -160,11 +121,32 @@ const Admin = () => {
     }
   };
 
+  const generateAuditPDF = () => {
+    try {
+      const doc = new jsPDF();
+      const today = new Date().toLocaleDateString();
+      doc.setFontSize(22);
+      doc.setTextColor(184, 134, 11); 
+      doc.text("KEDEST", 14, 20);
+      const bookedRooms = rooms.filter(r => r.isBooked);
+      if (bookedRooms.length === 0) return showToast("No active bookings", "error");
+      const tableData = bookedRooms.map(r => [r.name, r.bookedBy || "Guest", r.contactPhone || "N/A", `N${Number(r.price || 0).toLocaleString()}`, r.lastUpdated ? new Date(r.lastUpdated).toLocaleTimeString() : "N/A"]);
+      autoTable(doc, { startY: 45, head: [['ROOM', 'GUEST', 'CONTACT', 'RATE', 'TIME']], body: tableData, headStyles: { fillColor: [1, 22, 39], textColor: [184, 134, 11] }});
+      const finalY = doc.lastAutoTable?.finalY || 45;
+      doc.setFillColor(1, 22, 39);
+      doc.rect(14, finalY + 10, 182, 15, 'F');
+      doc.setTextColor(184, 134, 11);
+      doc.text(`TOTAL REVENUE: N${totalRevenue.toLocaleString()}`, 20, finalY + 20);
+      doc.save(`Kedest-Audit-${today}.pdf`);
+      showToast("Audit Exported");
+    } catch (err) { showToast("PDF Error", "error"); }
+  };
+
   if (showSuccess) {
     return (
-      <div className="h-screen bg-hotelNavy flex flex-col items-center justify-center p-6 text-center animate-pulse text-white">
+      <div className="h-screen bg-hotelNavy flex flex-col items-center justify-center p-6 text-center animate-pulse text-white font-sans">
         <FaCheckCircle className="text-hotelGold text-7xl mb-8 shadow-2xl" />
-        <h2 className="font-luxury text-4xl italic mb-4">Access Granted</h2>
+        <h2 className="font-luxury text-4xl italic mb-4 text-white">Access Granted</h2>
         <p className="text-hotelGold uppercase tracking-[0.5em] text-xs font-bold">Welcome, Commander</p>
       </div>
     );
@@ -173,15 +155,25 @@ const Admin = () => {
   if (!isAuthenticated) {
     return (
       <div className="h-screen bg-hotelNavy flex items-center justify-center p-6 font-sans">
-        <form onSubmit={handleLogin} className="bg-white p-10 shadow-2xl border-t-8 border-hotelGold max-w-sm w-full">
+        <form onSubmit={handleLogin} className="bg-white p-10 shadow-2xl border-t-8 border-hotelGold max-w-sm w-full text-center relative">
           <FaLock className="text-hotelGold text-4xl mx-auto mb-4" />
-          <h2 className="font-luxury text-2xl italic mb-6 text-hotelNavy text-center">Identity Verification</h2>
-          <input 
-            type="password" 
-            placeholder="Enter Master Key"
-            className="w-full border-b border-gray-300 py-3 outline-none focus:border-hotelGold mb-8 text-center text-lg tracking-[0.3em]"
-            onChange={(e) => setInputPass(e.target.value)}
-          />
+          <h2 className="font-luxury text-2xl italic mb-6 text-hotelNavy">Identity Verification</h2>
+          <div className="relative mb-8">
+            <input 
+              type={showPass ? "text" : "password"} 
+              placeholder="Enter Master Key"
+              className={`w-full border-b py-3 outline-none text-center text-lg tracking-[0.3em] transition-colors ${inputPass.length > 0 ? 'border-hotelGold' : 'border-gray-300'}`}
+              value={inputPass}
+              onChange={(e) => setInputPass(e.target.value)}
+            />
+            <button 
+              type="button" 
+              onClick={() => setShowPass(!showPass)} 
+              className="absolute right-0 top-4 text-gray-400 hover:text-hotelGold"
+            >
+              {showPass ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
           <button type="submit" className="w-full bg-hotelNavy text-hotelGold py-4 font-bold uppercase tracking-widest text-xs hover:bg-black transition-all">
             Authorize Entry
           </button>
@@ -195,23 +187,16 @@ const Admin = () => {
       <div className="max-w-5xl mx-auto">
         <header className="flex flex-col md:flex-row justify-between items-center md:items-end mb-10 border-b-2 border-hotelGold pb-6 gap-6">
           <div>
-            <h1 className="font-luxury text-4xl italic leading-none">Kedest Control Tower</h1>
+            <h1 className="font-luxury text-4xl italic text-hotelNavy">Kedest Control Tower</h1>
             <p className="text-gray-400 uppercase tracking-[0.3em] text-[10px] mt-2 font-bold">Aba Premium Operations</p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
-            <button 
-              onClick={generateAuditPDF}
-              className="flex items-center gap-2 bg-hotelGold text-hotelNavy px-4 py-2 rounded-sm text-[10px] font-bold uppercase tracking-widest hover:bg-white border border-hotelGold transition-all shadow-md"
-            >
-              <FaFileDownload /> Daily Audit
-            </button>
+            <button onClick={generateAuditPDF} className="flex items-center gap-2 bg-hotelGold text-hotelNavy px-4 py-2 rounded-sm text-[10px] font-bold uppercase tracking-widest hover:bg-white border border-hotelGold transition-all shadow-md"><FaFileDownload /> Daily Audit</button>
             <div className="text-center md:text-right border-l md:border-l-2 border-gray-200 pl-4 md:pl-6">
-                <p className="text-[10px] uppercase font-bold text-hotelGold leading-none mb-1">Live Revenue</p>
+                <p className="text-[10px] uppercase font-bold text-hotelGold mb-1">Live Revenue</p>
                 <p className="text-2xl font-luxury italic leading-none">N{totalRevenue.toLocaleString()}</p>
             </div>
-            <button onClick={handleLogout} className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-sm text-[10px] font-bold uppercase tracking-widest border border-red-100 hover:bg-red-600 hover:text-white transition-all">
-                <FaPowerOff />
-            </button>
+            <button onClick={() => setIsAuthenticated(false)} className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-sm text-[10px] font-bold uppercase tracking-widest border border-red-100 hover:bg-red-600 hover:text-white transition-all"><FaPowerOff /></button>
           </div>
         </header>
 
@@ -222,42 +207,32 @@ const Admin = () => {
             {rooms.map((room) => (
               <div key={room.docId} className="bg-white p-6 flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm border border-gray-100 relative overflow-hidden group">
                 {room.isBooked && <div className="absolute top-0 left-0 w-1.5 h-full bg-red-600"></div>}
-                <div className="flex items-center gap-6 w-full md:w-1/3 text-left">
-                  <div className="relative">
+                <div className="flex items-center gap-6 w-full md:w-1/3">
+                  <div className="relative shrink-0 mx-auto md:mx-0">
                     <img src={room.image} className="w-16 h-16 object-cover rounded-sm border grayscale group-hover:grayscale-0 transition-all duration-500" alt="" />
-                    {processingId === room.docId && (
-                      <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                        <FaSyncAlt className="animate-spin text-hotelGold" />
-                      </div>
-                    )}
+                    {processingId === room.docId && <div className="absolute inset-0 bg-white/80 flex items-center justify-center"><FaSyncAlt className="animate-spin text-hotelGold" /></div>}
                   </div>
                   <div className="flex-1">
                     <h3 className="font-bold uppercase text-sm tracking-widest leading-tight">{room.name}</h3>
                     {room.isBooked ? (
-                        <div className="mt-1 flex items-center gap-2 text-red-600">
-                            <FaUserCircle className="text-xs shrink-0" />
-                            <div className="flex flex-col overflow-hidden">
-                                <span className="text-[10px] font-bold uppercase truncate">{room.bookedBy || "Guest"}</span>
-                                <span className="text-[9px] text-gray-400">{room.contactPhone}</span>
-                            </div>
+                        <div className="mt-1 flex items-center justify-center md:justify-start gap-2 text-red-600">
+                            <FaUserCircle className="text-xs" />
+                            <div className="flex flex-col overflow-hidden text-left"><span className="text-[10px] font-bold uppercase truncate">{room.bookedBy || "Guest"}</span><span className="text-[9px] text-gray-400">{room.contactPhone}</span></div>
                         </div>
-                    ) : <p className="text-green-600 text-[9px] font-bold uppercase mt-1">Status: Available</p>}
-                    <p className="text-[8px] text-gray-300 font-mono mt-1 uppercase">
-                      Update: {room.lastUpdated ? new Date(room.lastUpdated).toLocaleTimeString() : "N/A"}
-                    </p>
+                    ) : <p className="text-green-600 text-[9px] font-bold uppercase mt-1 tracking-tighter">Status: Available</p>}
                   </div>
                 </div>
 
-                <div className="flex flex-col bg-gray-50 px-6 py-2 rounded-sm border w-full md:w-auto">
+                <div className={`flex flex-col px-6 py-2 rounded-sm border w-full md:w-auto transition-colors duration-300 ${room.price <= 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-100'}`}>
                   <span className="text-[8px] uppercase font-bold text-gray-400 mb-1">Rate (N)</span>
-                  <div className="flex items-center gap-2">
-                    <FaMoneyBillWave className="text-hotelGold text-sm" />
+                  <div className="flex items-center justify-center gap-2">
+                    <FaMoneyBillWave className={room.price <= 0 ? 'text-red-500' : 'text-hotelGold'} />
                     <input 
                       type="number" 
                       defaultValue={room.price}
                       disabled={processingId === room.docId}
                       onBlur={(e) => updatePrice(room.docId, e.target.value)}
-                      className="bg-transparent w-28 font-bold text-hotelNavy outline-none text-lg focus:text-hotelGold"
+                      className={`bg-transparent w-28 font-bold outline-none text-lg text-center ${room.price <= 0 ? 'text-red-600' : 'text-hotelNavy'}`}
                     />
                   </div>
                 </div>
@@ -265,11 +240,7 @@ const Admin = () => {
                 <button 
                   disabled={processingId === room.docId}
                   onClick={() => updateRoomStatus(room.docId, room.isBooked)} 
-                  className={`w-full md:w-48 py-4 text-[10px] font-bold uppercase tracking-widest border transition-all flex items-center justify-center gap-3 ${
-                    room.isBooked 
-                    ? 'border-green-600 text-green-600 hover:bg-green-600 hover:text-white' 
-                    : 'border-red-600 text-red-600 hover:bg-red-600 hover:text-white'
-                  }`}
+                  className={`w-full md:w-48 py-4 text-[10px] font-bold uppercase tracking-widest border transition-all flex items-center justify-center gap-3 ${room.isBooked ? 'border-green-600 text-green-600 hover:bg-green-600 hover:text-white' : 'border-red-600 text-red-600 hover:bg-red-600 hover:text-white'}`}
                 >
                   {processingId === room.docId ? <FaSyncAlt className="animate-spin" /> : (room.isBooked ? "Check Out" : "Mark Booked")}
                 </button>
@@ -279,31 +250,32 @@ const Admin = () => {
         )}
 
         <div className="mt-20 bg-white p-8 border border-gray-200 shadow-lg border-l-8 border-l-hotelGold">
-          <div className="flex items-center gap-4 mb-6 text-hotelGold"><FaKey /> <h3 className="font-bold uppercase tracking-widest text-sm text-hotelNavy font-sans">System Security</h3></div>
+          <div className="flex items-center gap-4 mb-6 text-hotelGold"><FaKey /> <h3 className="font-bold uppercase tracking-widest text-sm text-hotelNavy font-sans">Vault Security</h3></div>
           <div className="flex flex-col md:flex-row gap-4">
-            <input type="text" placeholder="New Master Key" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="flex-1 border p-3 outline-none focus:border-hotelGold text-sm font-mono" />
-            <button onClick={changePortalPassword} className="bg-hotelNavy text-hotelGold px-8 py-3 font-bold uppercase text-[10px] tracking-widest hover:bg-black transition-colors">Update Vault</button>
+            <div className="flex-1 relative">
+              <input 
+                type={showPass ? "text" : "password"} 
+                placeholder="New Master Key" 
+                value={newPassword} 
+                onChange={(e) => setNewPassword(e.target.value)} 
+                className={`w-full border p-3 outline-none text-sm font-mono transition-colors ${newPassword.length > 0 && newPassword.length < 6 ? 'border-red-500 focus:border-red-500' : 'focus:border-hotelGold'}`} 
+              />
+              <button onClick={() => setShowPass(!showPass)} className="absolute right-3 top-3 text-gray-400"><FaEye /></button>
+              {newPassword.length > 0 && newPassword.length < 6 && <p className="text-[8px] text-red-500 mt-1 uppercase font-bold tracking-widest">Weak Key: Use 6+ Characters</p>}
+            </div>
+            <button onClick={changePortalPassword} className={`px-8 py-3 font-bold uppercase text-[10px] tracking-widest transition-all ${newPassword.length >= 6 ? 'bg-hotelNavy text-hotelGold hover:bg-black' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}>Update Vault</button>
           </div>
         </div>
 
-        {/* TECHNICAL SUPPORT LINK */}
         <div className="mt-12 text-center pb-10">
           <p className="text-[9px] text-gray-400 uppercase tracking-widest mb-2 font-bold">System Issues?</p>
-          <a 
-            href="https://wa.me/2348067073060?text=Hello%20Chrisboi,%20I%20am%20in%20the%20Admin%20Portal%20and%20need%20assistance."
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-hotelGold text-[10px] font-bold uppercase tracking-[0.3em] hover:text-hotelNavy transition-colors inline-block border-b border-transparent hover:border-hotelNavy"
-          >
-            Contact Technical Architect
-          </a>
+          <a href="https://wa.me/2348067073060" className="text-hotelGold text-[10px] font-bold uppercase tracking-[0.3em] hover:text-hotelNavy transition-colors inline-block border-b border-transparent hover:border-hotelNavy">Contact Technical Architect</a>
         </div>
       </div>
 
-      {/* TOAST NOTIFICATION */}
       <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 transform ${notification.show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}`}>
         <div className={`px-8 py-4 rounded-full shadow-2xl flex items-center gap-4 border backdrop-blur-md ${notification.type === "success" ? "bg-hotelNavy/95 border-hotelGold text-white" : "bg-red-600 border-red-400 text-white"}`}>
-          <FaCheckCircle className={notification.type === "success" ? "text-hotelGold" : "text-white"} />
+          {notification.type === "success" ? <FaCheckCircle className="text-hotelGold" /> : <FaExclamationTriangle className="text-white" />}
           <span className="text-[10px] uppercase font-bold tracking-[0.2em]">{notification.message}</span>
         </div>
       </div>
