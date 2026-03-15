@@ -97,7 +97,7 @@ const Home = () => {
           <div className="flex flex-col lg:flex-row items-stretch gap-0 border border-gray-100 shadow-2xl">
             <div className="w-full lg:w-1/2 relative group overflow-hidden">
                 <img 
-                  src="/images/SMART HOTEL.jpg" 
+                  src="/images/SMART-HOTEL.jpg" 
                   alt="Kedest Hotel Building Exterior" 
                   className="w-full h-full min-h-[400px] md:min-h-[500px] object-cover transition-transform duration-[5000ms] group-hover:scale-110"
                 />
