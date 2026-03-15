@@ -28,7 +28,7 @@ const RoomCard = ({ room }) => {
         <div className="flex justify-between items-start">
           <h3 className="font-luxury text-2xl text-hotelNavy italic leading-tight">{room.name}</h3>
           <div className="text-hotelGold font-bold text-xl font-sans">
-            ${room.price}<span className="text-gray-400 text-xs font-light tracking-normal">/night</span>
+            ₦{room.price}<span className="text-gray-400 text-xs font-light tracking-normal">/night</span>
           </div>
         </div>
 
