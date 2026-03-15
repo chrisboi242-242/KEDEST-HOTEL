@@ -1,30 +1,35 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { DarkModeProvider } from './context/DarkModeContext';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer'; 
 import Home from './pages/Home';
 import About from './pages/About';
-import ExploreRooms from './pages/ExploreRooms';
-import AvailableRooms from './pages/AvailableRooms';
-import ExploreArea from './pages/ExploreArea';
-import ContactUs from './pages/ContactUs';
+import Suites from './pages/Suites';
+import Experience from './pages/Experience';
+import BookNow from './pages/BookNow';
 
 function App() {
   return (
-    <DarkModeProvider> 
-      <Router>
-        <div className="app-container">
-          <Navbar />
+    <Router>
+      {/* The flex-col min-h-screen ensures Footer stays at the bottom */}
+      <div className="flex flex-col min-h-screen bg-white">
+        
+        <Navbar />
+
+        <main className="flex-grow">
+          {/* RED TEST BAR REMOVED — THE DESIGN IS LIVE */}
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about-hotel" element={<About />} />
-            <Route path="/explore-rooms" element={<ExploreRooms />} />
-            <Route path="/available-rooms" element={<AvailableRooms />} />
-            <Route path="/explore-area" element={<ExploreArea />} />
-            <Route path="/contact" element={<ContactUs />} />
+            <Route path="/suites" element={<Suites />} />
+            <Route path="/experience" element={<Experience />} />
+            <Route path="/book-now" element={<BookNow />} />
           </Routes>
-        </div>
-      </Router>
-    </DarkModeProvider>
+        </main>
+
+        <Footer />
+        
+      </div>
+    </Router>
   );
 }
 

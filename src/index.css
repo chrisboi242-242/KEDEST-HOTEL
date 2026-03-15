@@ -1,116 +1,46 @@
-*{
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+@import "tailwindcss";
 
+/* 1. Link the config file explicitly for v4 compatibility */
+@config "../tailwind.config.js";
 
+@theme {
+  /* Matching your JS camelCase naming exactly */
+  --color-hotelNavy: #001f3f;
+  --color-hotelGold: #d4af37;
+  --color-hotelSoftWhite: #f9f9f9;
+  
+  /* Typography */
+  --font-luxury: "Playfair Display", serif;
+  
+  /* Animations for that 'Intense' look */
+  --animate-slow-zoom: slow-zoom 20s linear infinite;
+  --animate-fade-in: fade-in 1s ease-out forwards;
 
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-
-/* 1. Define the colors for Light Mode */
-:root {
-  --bg-color: #001f3f;             /* Deep Navy Blue Background */
-  --text-color: #D4AF37;           /* Gold Text */
-  --box-shadow-color: rgba(212, 175, 55, 0.3); /* Transparent Gold */
-  --border-color: #D4AF37;         /* Gold borders */
-
-  --navbar-bg: #001a33;            /* Slightly darker navy for navbar */
-  --navbar-text: #D4AF37;
-
-  --button-bg: #003366;            /* Slightly lighter navy for buttons */
-  --button-text: #D4AF37;
-
-  --card-bg: #002b5c;              /* Lighter navy for boxes/sections */
-  --card-text: #D4AF37;
-}
-
-/* DARK MODE (Midnight/High-Contrast Gold) */
-body.dark-mode {
-  --bg-color: #000a12;             /* Almost black-navy */
-  --text-color: #FFD700;           /* Brighter "Electric" Gold */
-  --box-shadow-color: rgba(0, 0, 0, 0.8); /* Deep black shadows */
-  --border-color: #8B7500;         /* Muted Bronze-Gold for borders */
-
-  --navbar-bg: #000000;            /* True black for navbar */
-  --navbar-text: #FFD700;
-
-  --button-bg: #D4AF37;            /* Reverse: Gold buttons */
-  --button-text: #000a12;          /* Dark text on gold buttons */
-
-  --card-bg: #011222;              /* Deepest navy for cards */
-  --card-text: #FFD700;
-}
-
-
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  padding: 0;
-  box-sizing: border-box;
-  place-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+  @keyframes slow-zoom {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
   }
-  a:hover {
-    color: #747bff;
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  button {
-    background-color: #f9f9f9;
+}
+
+/* 2. Custom font import */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;600&display=swap');
+
+@layer base {
+  body {
+    /* poppins as default, luxury for headings */
+    @apply font-["Poppins"] text-gray-900 bg-white antialiased;
   }
+  
+  h1, h2, h3, .font-luxury {
+    @apply font-luxury;
+  }
+}
+
+/* 3. Utility fixes for smooth scrolling */
+html {
+  scroll-behavior: smooth;
 }
