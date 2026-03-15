@@ -1,18 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, onSnapshot, doc, updateDoc, getDoc } from "firebase/firestore";
-import { FaSyncAlt, FaMoneyBillWave, FaLock, FaKey, FaPowerOff, FaUserCircle, FaCheckCircle } from 'react-icons/fa';
+import { FaSyncAlt, FaMoneyBillWave, FaLock, FaKey, FaPowerOff, FaUserCircle, FaCheckCircle, FaExclamationTriangle, FaFileDownload } from 'react-icons/fa';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const Admin = () => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Auth & Success States
+  // Auth & UI States
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [inputPass, setInputPass] = useState("");
   const [dbPassword, setDbPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  
+  // High-End UX States
+  const [processingId, setProcessingId] = useState(null);
+  const [notification, setNotification] = useState({ show: false, message: "", type: "" });
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -23,7 +29,7 @@ const Admin = () => {
           setDbPassword(docSnap.data().portalPassword);
         }
       } catch (err) {
-        console.error("Error fetching settings:", err);
+        console.error("Security Fetch Error:", err);
       }
     };
     fetchSettings();
@@ -36,7 +42,55 @@ const Admin = () => {
     return () => unsubscribe();
   }, []);
 
-  // Calculate Revenue
+  // PDF Generation Logic
+  const generateAuditPDF = () => {
+    const doc = new jsPDF();
+    const today = new Date().toLocaleDateString();
+    
+    // Header Branding
+    doc.setFontSize(22);
+    doc.setTextColor(1, 22, 39); // Hotel Navy
+    doc.text("KEDEST HOTEL & SUITES", 14, 20);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(150);
+    doc.text(`DAILY OCCUPANCY AUDIT - ${today}`, 14, 28);
+    doc.text("Aba, Abia State, Nigeria", 14, 33);
+
+    // Filter booked rooms
+    const bookedRooms = rooms.filter(r => r.isBooked);
+    const tableData = bookedRooms.map(r => [
+      r.name,
+      r.bookedBy || "Walk-in",
+      r.contactPhone || "N/A",
+      `N${Number(r.price).toLocaleString()}`,
+      r.lastUpdated ? new Date(r.lastUpdated).toLocaleTimeString() : "N/A"
+    ]);
+
+    // Generate Table
+    doc.autoTable({
+      startY: 45,
+      head: [['Room', 'Guest Name', 'Contact', 'Rate', 'Booked At']],
+      body: tableData,
+      headStyles: { fillColor: [184, 134, 11] }, // Gold color
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+    });
+
+    // Total Footer
+    const finalY = doc.lastAutoTable.finalY || 45;
+    doc.setFontSize(14);
+    doc.setTextColor(1, 22, 39);
+    doc.text(`Total Daily Revenue: N${totalRevenue.toLocaleString()}`, 14, finalY + 15);
+
+    doc.save(`Kedest-Audit-${today}.pdf`);
+    showToast("Audit Report Downloaded");
+  };
+
+  const showToast = (msg, type = "success") => {
+    setNotification({ show: true, message: msg, type });
+    setTimeout(() => setNotification({ show: false, message: "", type: "" }), 3000);
+  };
+
   const totalRevenue = rooms
     .filter(room => room.isBooked)
     .reduce((sum, room) => sum + (Number(room.price) || 0), 0);
@@ -44,13 +98,13 @@ const Admin = () => {
   const handleLogin = (e) => {
     e.preventDefault();
     if (inputPass === dbPassword) {
-      setShowSuccess(true); // TRIGGER SUCCESS SCREEN
+      setShowSuccess(true);
       setTimeout(() => {
         setIsAuthenticated(true);
         setShowSuccess(false);
       }, 2000);
     } else {
-      alert("Invalid Portal Key. Access Denied.");
+      showToast("Access Denied: Invalid Key", "error");
     }
   };
 
@@ -60,67 +114,76 @@ const Admin = () => {
   };
 
   const updateRoomStatus = async (id, currentStatus) => {
+    setProcessingId(id);
     try {
       const roomRef = doc(db, "rooms", id);
-      const updateData = { isBooked: !currentStatus };
+      const updateData = { 
+        isBooked: !currentStatus,
+        lastUpdated: new Date().toISOString()
+      };
       if (currentStatus === true) {
         updateData.bookedBy = "";
         updateData.contactPhone = "";
       }
       await updateDoc(roomRef, updateData);
+      showToast(currentStatus ? "Room Released" : "Room Secured", "success");
     } catch (err) {
-      alert("Status update failed.");
+      showToast("Sync Failed", "error");
+    } finally {
+      setProcessingId(null);
     }
   };
 
   const updatePrice = async (id, newPrice) => {
     if (!newPrice || isNaN(newPrice) || newPrice < 0) return;
+    setProcessingId(id);
     try {
       const roomRef = doc(db, "rooms", id);
-      await updateDoc(roomRef, { price: Number(newPrice) });
-      alert("Rate updated successfully.");
+      await updateDoc(roomRef, { 
+        price: Number(newPrice),
+        lastUpdated: new Date().toISOString()
+      });
+      showToast("Price Updated", "success");
     } catch (err) {
-      alert("Price update failed.");
+      showToast("Sync Failed", "error");
+    } finally {
+      setProcessingId(null);
     }
   };
 
   const changePortalPassword = async () => {
-    if (newPassword.length < 6) return alert("Password too weak!");
+    if (newPassword.length < 6) return showToast("Password too weak!", "error");
     try {
       const docRef = doc(db, "settings", "admin_config");
       await updateDoc(docRef, { portalPassword: newPassword });
       setDbPassword(newPassword);
-      alert("Master Security Key Updated.");
+      showToast("Security Key Updated", "success");
       setNewPassword("");
     } catch (err) {
-      alert("Failed to update password.");
+      showToast("Vault Update Failed", "error");
     }
   };
 
-  // --- SUCCESS OVERLAY ---
   if (showSuccess) {
     return (
-      <div className="h-screen bg-hotelNavy flex flex-col items-center justify-center p-6 text-center animate-pulse">
-        <div className="w-24 h-24 bg-hotelGold rounded-full flex items-center justify-center mb-8 shadow-[0_0_60px_rgba(212,175,55,0.4)]">
-          <FaCheckCircle className="text-hotelNavy text-5xl" />
-        </div>
-        <h2 className="font-luxury text-4xl italic text-white mb-4">Access Granted</h2>
+      <div className="h-screen bg-hotelNavy flex flex-col items-center justify-center p-6 text-center animate-pulse text-white">
+        <FaCheckCircle className="text-hotelGold text-7xl mb-8 shadow-2xl" />
+        <h2 className="font-luxury text-4xl italic mb-4">Access Granted</h2>
         <p className="text-hotelGold uppercase tracking-[0.5em] text-xs font-bold">Welcome, Commander</p>
       </div>
     );
   }
 
-  // --- LOGIN VIEW ---
   if (!isAuthenticated) {
     return (
-      <div className="h-screen bg-hotelNavy flex items-center justify-center p-6">
+      <div className="h-screen bg-hotelNavy flex items-center justify-center p-6 font-sans">
         <form onSubmit={handleLogin} className="bg-white p-10 shadow-2xl border-t-8 border-hotelGold max-w-sm w-full">
           <FaLock className="text-hotelGold text-4xl mx-auto mb-4" />
           <h2 className="font-luxury text-2xl italic mb-6 text-hotelNavy text-center">Identity Verification</h2>
           <input 
             type="password" 
             placeholder="Enter Master Key"
-            className="w-full border-b border-gray-300 py-3 outline-none focus:border-hotelGold mb-8 text-center text-lg tracking-widest"
+            className="w-full border-b border-gray-300 py-3 outline-none focus:border-hotelGold mb-8 text-center text-lg tracking-[0.3em]"
             onChange={(e) => setInputPass(e.target.value)}
           />
           <button type="submit" className="w-full bg-hotelNavy text-hotelGold py-4 font-bold uppercase tracking-widest text-xs hover:bg-black transition-all">
@@ -131,22 +194,27 @@ const Admin = () => {
     );
   }
 
-  // --- MAIN ADMIN PANEL ---
   return (
-    <div className="bg-[#f4f4f4] min-h-screen p-4 md:p-12 font-sans text-hotelNavy">
+    <div className="bg-[#f4f4f4] min-h-screen p-4 md:p-12 font-sans text-hotelNavy pb-32">
       <div className="max-w-5xl mx-auto">
         <header className="flex flex-col md:flex-row justify-between items-center md:items-end mb-10 border-b-2 border-hotelGold pb-6 gap-6">
           <div>
             <h1 className="font-luxury text-4xl italic leading-none">Kedest Control Tower</h1>
             <p className="text-gray-400 uppercase tracking-[0.3em] text-[10px] mt-2 font-bold">Aba Premium Operations</p>
           </div>
-          <div className="flex items-center gap-6">
-            <div className="text-right">
-                <p className="text-[10px] uppercase font-bold text-hotelGold">Total Occupancy Revenue</p>
-                <p className="text-2xl font-luxury italic">₦{totalRevenue.toLocaleString()}</p>
+          <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
+            <button 
+              onClick={generateAuditPDF}
+              className="flex items-center gap-2 bg-hotelGold text-hotelNavy px-4 py-2 rounded-sm text-[10px] font-bold uppercase tracking-widest hover:bg-white border border-hotelGold transition-all shadow-md"
+            >
+              <FaFileDownload /> Daily Audit
+            </button>
+            <div className="text-center md:text-right border-l md:border-l-2 border-gray-200 pl-4 md:pl-6">
+                <p className="text-[10px] uppercase font-bold text-hotelGold leading-none mb-1">Live Revenue</p>
+                <p className="text-2xl font-luxury italic leading-none">N{totalRevenue.toLocaleString()}</p>
             </div>
             <button onClick={handleLogout} className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-sm text-[10px] font-bold uppercase tracking-widest border border-red-100 hover:bg-red-600 hover:text-white transition-all">
-                <FaPowerOff /> Logout
+                <FaPowerOff />
             </button>
           </div>
         </header>
@@ -156,49 +224,80 @@ const Admin = () => {
         ) : (
           <div className="space-y-4">
             {rooms.map((room) => (
-              <div key={room.docId} className="bg-white p-6 flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm border border-gray-100 relative overflow-hidden">
-                {room.isBooked && <div className="absolute top-0 left-0 w-1 h-full bg-red-500"></div>}
+              <div key={room.docId} className="bg-white p-6 flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm border border-gray-100 relative overflow-hidden group">
+                {room.isBooked && <div className="absolute top-0 left-0 w-1.5 h-full bg-red-600"></div>}
                 
-                <div className="flex items-center gap-6 w-full md:w-1/3">
-                  <img src={room.image} className="w-16 h-16 object-cover rounded-sm border" alt="" />
-                  <div>
+                <div className="flex items-center gap-6 w-full md:w-1/3 text-left">
+                  <div className="relative">
+                    <img src={room.image} className="w-16 h-16 object-cover rounded-sm border grayscale group-hover:grayscale-0 transition-all duration-500" alt="" />
+                    {processingId === room.docId && (
+                      <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                        <FaSyncAlt className="animate-spin text-hotelGold" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
                     <h3 className="font-bold uppercase text-sm tracking-widest leading-tight">{room.name}</h3>
                     {room.isBooked ? (
                         <div className="mt-1 flex items-center gap-2 text-red-600">
-                            <FaUserCircle />
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-bold uppercase">{room.bookedBy || "Guest"}</span>
+                            <FaUserCircle className="text-xs shrink-0" />
+                            <div className="flex flex-col overflow-hidden">
+                                <span className="text-[10px] font-bold uppercase truncate">{room.bookedBy || "Walk-in Guest"}</span>
                                 <span className="text-[9px] text-gray-400">{room.contactPhone}</span>
                             </div>
                         </div>
-                    ) : <p className="text-green-600 text-[9px] font-bold uppercase mt-1">Status: Vacant</p>}
+                    ) : <p className="text-green-600 text-[9px] font-bold uppercase mt-1">Status: Available</p>}
+                    <p className="text-[8px] text-gray-300 font-mono mt-1 uppercase">
+                      Update: {room.lastUpdated ? new Date(room.lastUpdated).toLocaleTimeString() : "N/A"}
+                    </p>
                   </div>
                 </div>
 
                 <div className="flex flex-col bg-gray-50 px-6 py-2 rounded-sm border w-full md:w-auto">
-                  <span className="text-[8px] uppercase font-bold text-gray-400 mb-1">Nightly Rate (₦)</span>
-                  <input 
-                    type="number" 
-                    defaultValue={room.price}
-                    onBlur={(e) => updatePrice(room.docId, e.target.value)}
-                    className="bg-transparent w-28 font-bold text-hotelNavy outline-none text-lg"
-                  />
+                  <span className="text-[8px] uppercase font-bold text-gray-400 mb-1">Rate (N)</span>
+                  <div className="flex items-center gap-2">
+                    <FaMoneyBillWave className="text-hotelGold text-sm" />
+                    <input 
+                      type="number" 
+                      defaultValue={room.price}
+                      disabled={processingId === room.docId}
+                      onBlur={(e) => updatePrice(room.docId, e.target.value)}
+                      className="bg-transparent w-28 font-bold text-hotelNavy outline-none text-lg focus:text-hotelGold"
+                    />
+                  </div>
                 </div>
 
-                <button onClick={() => updateRoomStatus(room.docId, room.isBooked)} className={`w-full md:w-48 py-4 text-[10px] font-bold uppercase tracking-widest border transition-all ${room.isBooked ? 'border-green-600 text-green-600 hover:bg-green-600 hover:text-white' : 'border-red-500 text-red-500 hover:bg-red-500 hover:text-white'}`}>
-                  {room.isBooked ? "Check Out Guest" : "Mark Booked"}
+                <button 
+                  disabled={processingId === room.docId}
+                  onClick={() => updateRoomStatus(room.docId, room.isBooked)} 
+                  className={`w-full md:w-48 py-4 text-[10px] font-bold uppercase tracking-widest border transition-all flex items-center justify-center gap-3 ${
+                    room.isBooked 
+                    ? 'border-green-600 text-green-600 hover:bg-green-600 hover:text-white' 
+                    : 'border-red-600 text-red-600 hover:bg-red-600 hover:text-white'
+                  }`}
+                >
+                  {processingId === room.docId ? <FaSyncAlt className="animate-spin" /> : (room.isBooked ? "Check Out" : "Mark Booked")}
                 </button>
               </div>
             ))}
           </div>
         )}
 
+        {/* SECURITY */}
         <div className="mt-20 bg-white p-8 border border-gray-200 shadow-lg border-l-8 border-l-hotelGold">
-          <div className="flex items-center gap-4 mb-6 text-hotelGold"><FaKey /> <h3 className="font-bold uppercase tracking-widest text-sm text-hotelNavy">Security Settings</h3></div>
+          <div className="flex items-center gap-4 mb-6 text-hotelGold"><FaKey /> <h3 className="font-bold uppercase tracking-widest text-sm text-hotelNavy font-sans">System Security</h3></div>
           <div className="flex flex-col md:flex-row gap-4">
-            <input type="text" placeholder="New Password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="flex-1 border p-3 outline-none focus:border-hotelGold text-sm" />
-            <button onClick={changePortalPassword} className="bg-hotelNavy text-hotelGold px-8 py-3 font-bold uppercase text-[10px] tracking-widest hover:bg-black transition-colors">Update Key</button>
+            <input type="text" placeholder="New Master Key" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="flex-1 border p-3 outline-none focus:border-hotelGold text-sm font-mono" />
+            <button onClick={changePortalPassword} className="bg-hotelNavy text-hotelGold px-8 py-3 font-bold uppercase text-[10px] tracking-widest hover:bg-black transition-colors">Update Vault</button>
           </div>
+        </div>
+      </div>
+
+      {/* TOAST */}
+      <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 transform ${notification.show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}`}>
+        <div className={`px-8 py-4 rounded-full shadow-2xl flex items-center gap-4 border backdrop-blur-md ${notification.type === "success" ? "bg-hotelNavy/95 border-hotelGold text-white" : "bg-red-600 border-red-400 text-white"}`}>
+          <FaCheckCircle className={notification.type === "success" ? "text-hotelGold" : "text-white"} />
+          <span className="text-[10px] uppercase font-bold tracking-[0.2em]">{notification.message}</span>
         </div>
       </div>
     </div>

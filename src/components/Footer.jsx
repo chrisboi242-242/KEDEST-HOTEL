@@ -6,18 +6,27 @@ const Footer = () => {
   const navigate = useNavigate();
   const [clickCount, setClickCount] = useState(0);
 
-  // SECRET ACCESS LOGIC
-  const handleSecretAccess = (e) => {
-    // Prevent the WhatsApp link from opening if we're doing the secret taps
-    e.preventDefault();
-    
+  // SECRET ACCESS + SUPPORT LOGIC
+  const handleBrandingAction = () => {
     const newCount = clickCount + 1;
     setClickCount(newCount);
 
+    // If they tap 5 times quickly, go to Admin
     if (newCount >= 5) {
       setClickCount(0);
-      navigate('/kedest-admin-portal-2026'); // Make sure this matches your Route in App.js
+      navigate('/kedest-admin-portal-2026');
+      return;
     }
+
+    // Reset the counter after 2 seconds of inactivity so normal clicks don't accidentally trigger Admin
+    setTimeout(() => setClickCount(0), 2000);
+  };
+
+  const handleWhatsAppContact = () => {
+    // Replace the X's with your real phone number
+    const myNumber = "2348067073060"; 
+    const message = encodeURIComponent("Hello Chrisboi, I need support with the Kedest Hotel website.");
+    window.open(`https://wa.me/${myNumber}?text=${message}`, '_blank');
   };
 
   return (
@@ -38,6 +47,7 @@ const Footer = () => {
           </p>
           <div className="flex gap-4 text-hotelGold text-xl">
              <a href="#" className="hover:text-white transition-colors duration-300"><FaInstagram /></a>
+             {/* Hotel WhatsApp for Guests */}
              <a href="https://wa.me/2348067073060" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors duration-300"><FaWhatsapp /></a>
           </div>
         </div>
@@ -63,16 +73,11 @@ const Footer = () => {
             </li>
             <li className="flex items-center gap-3 group">
               <FaPhone className="text-hotelGold group-hover:scale-110 transition-transform" />
-              <a href="tel:+2348067073060" className="hover:text-hotelGold transition-colors duration-300">
+              <a href="tel:+2348067073060" className="hover:text-hotelGold transition-colors duration-300 font-medium">
                 0806 707 3060
               </a>
             </li>
           </ul>
-          <div className="pt-4">
-             <span className="inline-block border border-hotelGold/30 px-4 py-2 text-[10px] tracking-widest text-hotelGold uppercase font-bold font-sans">
-                24/7 Solar Powered
-             </span>
-          </div>
         </div>
       </div>
 
@@ -83,12 +88,13 @@ const Footer = () => {
           &copy; 2026 Kedest Hotel & Suites. All Rights Reserved.
         </p>
         
-        {/* Your Branding - Secret Entry Point */}
+        {/* Your Branding - The Double-Duty Link */}
         <div className="flex items-center gap-2 italic text-gray-600">
           <span className="opacity-70">Architected by</span>
           <button 
-            onClick={handleSecretAccess}
-            className="text-hotelGold/60 hover:text-hotelGold transition-all duration-300 font-bold border-b border-hotelGold/10 hover:border-hotelGold/40 pb-0.5 outline-none bg-transparent"
+            onClick={handleBrandingAction}
+            onDoubleClick={handleWhatsAppContact} // Double click for instant support
+            className="text-hotelGold/60 hover:text-hotelGold transition-all duration-300 font-bold border-b border-hotelGold/10 hover:border-hotelGold/40 pb-0.5 outline-none bg-transparent active:scale-95"
           >
             Chrisboi Excellence
           </button>
