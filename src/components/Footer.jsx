@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaInstagram, FaWhatsapp, FaMapMarkerAlt, FaPhone } from 'react-icons/fa';
 
@@ -6,28 +6,24 @@ const Footer = () => {
   const navigate = useNavigate();
   const [clickCount, setClickCount] = useState(0);
 
-  // SECRET ACCESS + SUPPORT LOGIC
-  const handleBrandingAction = () => {
+  // SECRET ACCESS LOGIC (5 Fast Taps)
+  const handleSecretAccess = () => {
     const newCount = clickCount + 1;
     setClickCount(newCount);
 
-    // If they tap 5 times quickly, go to Admin
     if (newCount >= 5) {
       setClickCount(0);
       navigate('/kedest-admin-portal-2026');
-      return;
     }
-
-    // Reset the counter after 2 seconds of inactivity so normal clicks don't accidentally trigger Admin
-    setTimeout(() => setClickCount(0), 2000);
   };
 
-  const handleWhatsAppContact = () => {
-    // Replace the X's with your real phone number
-    const myNumber = "2348067073060"; 
-    const message = encodeURIComponent("Hello Chrisboi, I need support with the Kedest Hotel website.");
-    window.open(`https://wa.me/${myNumber}?text=${message}`, '_blank');
-  };
+  // Reset counter if user stops tapping for 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setClickCount(0);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [clickCount]);
 
   return (
     <footer className="bg-hotelNavy text-white pt-20 pb-10 px-6 border-t border-hotelGold/20">
@@ -81,20 +77,19 @@ const Footer = () => {
         </div>
       </div>
 
-     {/* COPYRIGHT & BRANDING SIGNATURE */}
+      {/* COPYRIGHT & BRANDING SIGNATURE */}
       <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-[0.3em] font-sans">
         
         <p className="text-gray-300">
           &copy; 2026 Kedest Hotel & Suites. All Rights Reserved.
         </p>
         
-        {/* Your Branding - The Double-Duty Link */}
+        {/* Your Branding - Secret Entry Point ONLY */}
         <div className="flex items-center gap-2 italic text-gray-600">
           <span className="opacity-70">Architected by</span>
           <button 
-            onClick={handleBrandingAction}
-            onDoubleClick={handleWhatsAppContact} // Double click for instant support
-            className="text-hotelGold/60 hover:text-hotelGold transition-all duration-300 font-bold border-b border-hotelGold/10 hover:border-hotelGold/40 pb-0.5 outline-none bg-transparent active:scale-95"
+            onClick={handleSecretAccess}
+            className="text-hotelGold/60 hover:text-hotelGold transition-all duration-300 font-bold border-b border-hotelGold/10 hover:border-hotelGold/40 pb-0.5 outline-none bg-transparent cursor-default active:text-hotelGold"
           >
             Chrisboi Excellence
           </button>

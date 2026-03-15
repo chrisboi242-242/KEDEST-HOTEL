@@ -47,9 +47,8 @@ const Admin = () => {
     const doc = new jsPDF();
     const today = new Date().toLocaleDateString();
     
-    // Header Branding
     doc.setFontSize(22);
-    doc.setTextColor(1, 22, 39); // Hotel Navy
+    doc.setTextColor(1, 22, 39); 
     doc.text("KEDEST HOTEL & SUITES", 14, 20);
     
     doc.setFontSize(10);
@@ -57,7 +56,6 @@ const Admin = () => {
     doc.text(`DAILY OCCUPANCY AUDIT - ${today}`, 14, 28);
     doc.text("Aba, Abia State, Nigeria", 14, 33);
 
-    // Filter booked rooms
     const bookedRooms = rooms.filter(r => r.isBooked);
     const tableData = bookedRooms.map(r => [
       r.name,
@@ -67,23 +65,21 @@ const Admin = () => {
       r.lastUpdated ? new Date(r.lastUpdated).toLocaleTimeString() : "N/A"
     ]);
 
-    // Generate Table
     doc.autoTable({
       startY: 45,
-      head: [['Room', 'Guest Name', 'Contact', 'Rate', 'Booked At']],
+      head: [['Room', 'Guest Name', 'Contact', 'Rate', 'Last Action']],
       body: tableData,
-      headStyles: { fillColor: [184, 134, 11] }, // Gold color
+      headStyles: { fillColor: [184, 134, 11] },
       alternateRowStyles: { fillColor: [245, 245, 245] },
     });
 
-    // Total Footer
     const finalY = doc.lastAutoTable.finalY || 45;
     doc.setFontSize(14);
     doc.setTextColor(1, 22, 39);
-    doc.text(`Total Daily Revenue: N${totalRevenue.toLocaleString()}`, 14, finalY + 15);
+    doc.text(`Total Occupancy Revenue: N${totalRevenue.toLocaleString()}`, 14, finalY + 15);
 
     doc.save(`Kedest-Audit-${today}.pdf`);
-    showToast("Audit Report Downloaded");
+    showToast("Audit Report Generated");
   };
 
   const showToast = (msg, type = "success") => {
@@ -157,10 +153,10 @@ const Admin = () => {
       const docRef = doc(db, "settings", "admin_config");
       await updateDoc(docRef, { portalPassword: newPassword });
       setDbPassword(newPassword);
-      showToast("Security Key Updated", "success");
+      showToast("Vault Updated", "success");
       setNewPassword("");
     } catch (err) {
-      showToast("Vault Update Failed", "error");
+      showToast("Update Failed", "error");
     }
   };
 
@@ -226,7 +222,6 @@ const Admin = () => {
             {rooms.map((room) => (
               <div key={room.docId} className="bg-white p-6 flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm border border-gray-100 relative overflow-hidden group">
                 {room.isBooked && <div className="absolute top-0 left-0 w-1.5 h-full bg-red-600"></div>}
-                
                 <div className="flex items-center gap-6 w-full md:w-1/3 text-left">
                   <div className="relative">
                     <img src={room.image} className="w-16 h-16 object-cover rounded-sm border grayscale group-hover:grayscale-0 transition-all duration-500" alt="" />
@@ -242,7 +237,7 @@ const Admin = () => {
                         <div className="mt-1 flex items-center gap-2 text-red-600">
                             <FaUserCircle className="text-xs shrink-0" />
                             <div className="flex flex-col overflow-hidden">
-                                <span className="text-[10px] font-bold uppercase truncate">{room.bookedBy || "Walk-in Guest"}</span>
+                                <span className="text-[10px] font-bold uppercase truncate">{room.bookedBy || "Guest"}</span>
                                 <span className="text-[9px] text-gray-400">{room.contactPhone}</span>
                             </div>
                         </div>
@@ -283,7 +278,6 @@ const Admin = () => {
           </div>
         )}
 
-        {/* SECURITY */}
         <div className="mt-20 bg-white p-8 border border-gray-200 shadow-lg border-l-8 border-l-hotelGold">
           <div className="flex items-center gap-4 mb-6 text-hotelGold"><FaKey /> <h3 className="font-bold uppercase tracking-widest text-sm text-hotelNavy font-sans">System Security</h3></div>
           <div className="flex flex-col md:flex-row gap-4">
@@ -291,9 +285,22 @@ const Admin = () => {
             <button onClick={changePortalPassword} className="bg-hotelNavy text-hotelGold px-8 py-3 font-bold uppercase text-[10px] tracking-widest hover:bg-black transition-colors">Update Vault</button>
           </div>
         </div>
+
+        {/* TECHNICAL SUPPORT LINK */}
+        <div className="mt-12 text-center pb-10">
+          <p className="text-[9px] text-gray-400 uppercase tracking-widest mb-2 font-bold">System Issues?</p>
+          <a 
+            href="https://wa.me/2348067073060?text=Hello%20Chrisboi,%20I%20am%20in%20the%20Admin%20Portal%20and%20need%20assistance."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-hotelGold text-[10px] font-bold uppercase tracking-[0.3em] hover:text-hotelNavy transition-colors inline-block border-b border-transparent hover:border-hotelNavy"
+          >
+            Contact Technical Architect
+          </a>
+        </div>
       </div>
 
-      {/* TOAST */}
+      {/* TOAST NOTIFICATION */}
       <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 transform ${notification.show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}`}>
         <div className={`px-8 py-4 rounded-full shadow-2xl flex items-center gap-4 border backdrop-blur-md ${notification.type === "success" ? "bg-hotelNavy/95 border-hotelGold text-white" : "bg-red-600 border-red-400 text-white"}`}>
           <FaCheckCircle className={notification.type === "success" ? "text-hotelGold" : "text-white"} />
