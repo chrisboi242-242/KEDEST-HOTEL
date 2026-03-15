@@ -26,12 +26,8 @@
   }
 }
 
-/* 2. Custom font import */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;600&display=swap');
-
 @layer base {
   body {
-    /* poppins as default, luxury for headings */
     @apply font-["Poppins"] text-gray-900 bg-white antialiased;
   }
   
@@ -40,7 +36,6 @@
   }
 }
 
-/* 3. Utility fixes for smooth scrolling */
 html {
   scroll-behavior: smooth;
 }
