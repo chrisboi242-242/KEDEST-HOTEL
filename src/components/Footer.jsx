@@ -1,8 +1,25 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaInstagram, FaWhatsapp, FaMapMarkerAlt, FaPhone } from 'react-icons/fa';
 
 const Footer = () => {
+  const navigate = useNavigate();
+  const [clickCount, setClickCount] = useState(0);
+
+  // SECRET ACCESS LOGIC
+  const handleSecretAccess = (e) => {
+    // Prevent the WhatsApp link from opening if we're doing the secret taps
+    e.preventDefault();
+    
+    const newCount = clickCount + 1;
+    setClickCount(newCount);
+
+    if (newCount >= 5) {
+      setClickCount(0);
+      navigate('/kedest-admin-portal-2026'); // Make sure this matches your Route in App.js
+    }
+  };
+
   return (
     <footer className="bg-hotelNavy text-white pt-20 pb-10 px-6 border-t border-hotelGold/20">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
@@ -45,14 +62,11 @@ const Footer = () => {
               <span>Aba, Abia State, Nigeria</span>
             </li>
             <li className="flex items-center gap-3 group">
-  <FaPhone className="text-hotelGold group-hover:scale-110 transition-transform" />
-  <a 
-    href="tel:+2348067073060" 
-    className="hover:text-hotelGold transition-colors duration-300"
-  >
-    0806 707 3060
-  </a>
-</li>
+              <FaPhone className="text-hotelGold group-hover:scale-110 transition-transform" />
+              <a href="tel:+2348067073060" className="hover:text-hotelGold transition-colors duration-300">
+                0806 707 3060
+              </a>
+            </li>
           </ul>
           <div className="pt-4">
              <span className="inline-block border border-hotelGold/30 px-4 py-2 text-[10px] tracking-widest text-hotelGold uppercase font-bold font-sans">
@@ -65,22 +79,19 @@ const Footer = () => {
      {/* COPYRIGHT & BRANDING SIGNATURE */}
       <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-[0.3em] font-sans">
         
-        {/* Main Copyright - More Visible */}
         <p className="text-gray-300">
           &copy; 2026 Kedest Hotel & Suites. All Rights Reserved.
         </p>
         
-        {/* Your Branding - Subtle & Dimmed */}
+        {/* Your Branding - Secret Entry Point */}
         <div className="flex items-center gap-2 italic text-gray-600">
           <span className="opacity-70">Architected by</span>
-          <a 
-            href="https://wa.me/2348067073060" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-hotelGold/60 hover:text-hotelGold transition-all duration-300 font-bold border-b border-hotelGold/10 hover:border-hotelGold/40 pb-0.5"
+          <button 
+            onClick={handleSecretAccess}
+            className="text-hotelGold/60 hover:text-hotelGold transition-all duration-300 font-bold border-b border-hotelGold/10 hover:border-hotelGold/40 pb-0.5 outline-none bg-transparent"
           >
             Chrisboi Excellence
-          </a>
+          </button>
         </div>
       </div>
     </footer>

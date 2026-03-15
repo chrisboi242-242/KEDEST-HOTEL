@@ -6,23 +6,25 @@ import About from './pages/About';
 import Suites from './pages/Suites';
 import Experience from './pages/Experience';
 import BookNow from './pages/BookNow';
+import Admin from './pages/Admin';
 
 function App() {
   return (
     <Router>
-      {/* The flex-col min-h-screen ensures Footer stays at the bottom */}
       <div className="flex flex-col min-h-screen bg-white">
         
         <Navbar />
 
         <main className="flex-grow">
-          {/* RED TEST BAR REMOVED — THE DESIGN IS LIVE */}
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about-hotel" element={<About />} />
             <Route path="/suites" element={<Suites />} />
             <Route path="/experience" element={<Experience />} />
             <Route path="/book-now" element={<BookNow />} />
+            
+            {/* SYNCED SECRET ROUTE: Matches the Footer navigate call */}
+            <Route path="/kedest-admin-portal-2026" element={<Admin />} />
           </Routes>
         </main>
 
